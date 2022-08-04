@@ -18,30 +18,67 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_instance" "master" {
-  ami = "ami-085284d24fe829cd0"
-  instance_type = "t2.medium"
+  ami             = "ami-085284d24fe829cd0"
+  instance_type   = "t2.medium"
   security_groups = [aws_security_group.sg_master.name]
-  count = 1
+  count           = 1
+  key_name        = var.instance_ssh_key_name
 
   tags = {
     Name = "master"
   }
+
+  provisioner "local-exec" {
+    command = "echo ${self.public_ip} ${self.tags.Name} >> hosts"
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("${var.instance_ssh_key_path}")
+    host        = self.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo hostnamectl set-hostname ${self.tags.Name}",
+      "hostname"
+    ]
+  }
 }
 
 resource "aws_instance" "worker" {
-  ami = "ami-085284d24fe829cd0"
-  instance_type = "t2.medium"
+  ami             = "ami-085284d24fe829cd0"
+  instance_type   = "t2.medium"
   security_groups = [aws_security_group.sg_worker.name]
-  count = 2
+  count           = 2
+  key_name        = var.instance_ssh_key_name
 
   tags = {
     Name = "worker${count.index + 1}"
   }
+
+  provisioner "local-exec" {
+    command = "echo ${self.public_ip} ${self.tags.Name} >> hosts"
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("${var.instance_ssh_key_path}")
+    host        = self.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "hostnamectl set-hostname ${self.tags.Name}",
+      "hostname"
+    ]
+  }
 }
 
 resource "aws_security_group" "sg_master" {
-
-  name = "sg_master"
+  name        = "sg_master"
   description = "allowed traffic to the cluster master"
 
   ingress {
@@ -107,7 +144,6 @@ resource "aws_security_group" "sg_master" {
 }
 
 resource "aws_security_group" "sg_worker" {
-
   name = "sg_worker"
   description = "allowed traffic to the cluster worker"
 
@@ -156,5 +192,4 @@ resource "aws_security_group" "sg_worker" {
   tags = {
     Name = "sg_worker"
   }
-
 }
