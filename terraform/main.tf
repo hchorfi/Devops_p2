@@ -29,7 +29,10 @@ resource "aws_instance" "master" {
   }
 
   provisioner "local-exec" {
-    command = "echo ${self.public_ip} ${self.tags.Name} >> hosts"
+    command = <<EOT
+                echo ${self.public_ip} ${self.tags.Name} >> ${var.hosts_file}
+                echo ${self.private_ip} ${self.tags.Name} >> ${var.inventory_file}
+              EOT
   }
 
   connection {
@@ -59,7 +62,10 @@ resource "aws_instance" "worker" {
   }
 
   provisioner "local-exec" {
-    command = "echo ${self.public_ip} ${self.tags.Name} >> hosts"
+    command = <<EOT
+                echo ${self.public_ip} ${self.tags.Name} >> ${var.hosts_file}
+                echo ${self.private_ip} ${self.tags.Name} >> ${var.inventory_file}
+              EOT
   }
 
   connection {
