@@ -1,0 +1,35 @@
+
+PLAY [all] *******************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************
+ok: [worker2]
+ok: [master1]
+ok: [worker1]
+
+TASK [display mssg from env] *************************************************************************************************
+ok: [master1] => {
+    "msg": "hello"
+}
+ok: [worker1] => {
+    "msg": "hello"
+}
+ok: [worker2] => {
+    "msg": "hello"
+}
+
+TASK [print distro] **********************************************************************************************************
+ok: [master1] => {
+    "msg": "master {'gateway': '172.31.16.1', 'interface': 'eth0', 'address': '172.31.20.77', 'broadcast': '100', 'netmask': '255.255.240.0', 'network': '172.31.16.0', 'macaddress': '02:4f:26:39:41:63', 'mtu': 9001, 'type': 'ether', 'alias': 'eth0'}"
+}
+ok: [worker1] => {
+    "msg": "ip-172-31-27-226 {'gateway': '172.31.16.1', 'interface': 'eth0', 'address': '172.31.27.226', 'broadcast': '100', 'netmask': '255.255.240.0', 'network': '172.31.16.0', 'macaddress': '02:fb:cc:1a:b3:a1', 'mtu': 9001, 'type': 'ether', 'alias': 'eth0'}"
+}
+ok: [worker2] => {
+    "msg": "ip-172-31-16-97 {'gateway': '172.31.16.1', 'interface': 'eth0', 'address': '172.31.16.97', 'broadcast': '100', 'netmask': '255.255.240.0', 'network': '172.31.16.0', 'macaddress': '02:ad:ee:dc:21:91', 'mtu': 9001, 'type': 'ether', 'alias': 'eth0'}"
+}
+
+PLAY RECAP *******************************************************************************************************************
+master1                    : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+worker1                    : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+worker2                    : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

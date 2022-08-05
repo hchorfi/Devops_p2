@@ -1,0 +1,25 @@
+- hosts: all
+  vars:
+    env: hello
+  gather_facts: true
+  tasks:
+
+  - name: display mssg from env
+    debug:
+      msg: "{{ env }}"
+  
+  - name: print some info
+    debug: 
+      msg: " hello {{ ansible_hostname }} {{ ansible_default_ipv4.address }}"
+  
+  - name: add ip to hosts file
+    become: true
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ ansible_hostname }} {{ ansible_default_ipv4.address }}"
+  
+  - name: append to hosts file's server
+    become: true
+    blockinfile: 
+      block: "{{ lookup('file', './../terraform/hosts') }}"
+      path: /etc/hosts
