@@ -1,9 +1,9 @@
 [masters]
-master1 ansible_host=13.56.232.65
+master ansible_host=13.57.199.207
 
 [workers]
-worker1 ansible_host=184.169.250.43
-worker2 ansible_host=54.177.121.216
+worker1 ansible_host=13.57.49.98
+worker2 ansible_host=54.215.32.86
 
 [masters:vars]
 ansible_ssh_private_key_file=~/.ssh/aws_terraform.cer

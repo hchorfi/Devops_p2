@@ -71,7 +71,7 @@ resource "aws_instance" "worker" {
 
   provisioner "remote-exec" {
     inline = [
-      "hostnamectl set-hostname ${self.tags.Name}",
+      "sudo hostnamectl set-hostname ${self.tags.Name}",
       "hostname"
     ]
   }
