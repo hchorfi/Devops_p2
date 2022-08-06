@@ -1,25 +1,80 @@
 - hosts: all
-  vars:
-    env: hello
   gather_facts: true
   tasks:
-
-  - name: display mssg from env
-    debug:
-      msg: "{{ env }}"
   
   - name: print some info
     debug: 
       msg: " hello {{ ansible_hostname }} {{ ansible_default_ipv4.address }}"
-  
-  - name: add ip to hosts file
-    become: true
-    lineinfile:
-      path: /etc/hosts
-      line: "{{ ansible_hostname }} {{ ansible_default_ipv4.address }}"
   
   - name: append to hosts file's server
     become: true
     blockinfile: 
       block: "{{ lookup('file', './../terraform/hosts') }}"
       path: /etc/hosts
+
+  - name: add k8s.conf file
+    become: true
+    blockinfile:
+      path: /etc/modules-load.d/k8s.conf
+      block: |
+        overlay
+        br_netfilter
+      create: yes
+  
+  - name: add overlay and br_netfilter load to kernel
+    become: true
+    shell: |
+      modprobe overlay
+      modprobe br_netfilter
+  
+  - name: sysctl params required by setup, params persist across reboots
+    become: true
+    blockinfile:
+      path: /etc/sysctl.d/k8s.conf
+      block: |
+        net.bridge.bridge-nf-call-iptables  = 1
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.ipv4.ip_forward                 = 1
+      create: yes
+
+  - name: Apply sysctl params without reboot
+    become: true
+    command: sysctl --system
+
+  - name: install containerd
+    become: true
+    apt:
+      name: containerd
+      update_cache: yes
+  
+  - name: create containerd folder
+    become: true
+    file:
+      path: /etc/containerd
+      state: directory
+
+  - name: check if config.toml exist
+    stat:
+      path: /etc/containerd/config.toml
+    register: config_toml_exist
+  
+  - name: run containerd config
+    become: true
+    command: containerd config default
+    when: not config_toml_exist.stat.exists
+    register: containerd_config_default
+  
+  - name: add containerd config to config.toml file
+    become: true
+    blockinfile:
+      path: /etc/containerd/config.toml
+      block: |
+        {{ containerd_config_default.stdout }}
+      create: yes
+    when: not config_toml_exist.stat.exists
+
+  - name: restart containerd
+    become: true
+    systemd:
+      state: restarted
+      name: containerd
