@@ -1,0 +1,43 @@
+- hosts: masters
+  gather_facts: true
+  tasks:
+
+  - name: check if admin.conf exist
+    become: true
+    stat:
+      path: /etc/kubernetes/admin.conf
+    register: admin_conf_exist
+
+  - name: init kubeadm
+    become: true
+    command: kubeadm init
+    when: not admin_conf_exist.stat.exists
+    # register: kubeadm_init
+  
+  - name: create .kube directory
+    become: yes
+    become_user: ubuntu
+    file:
+      path: $HOME/.kube
+      state: directory
+      mode: 0755
+
+  - name: copy admin.conf to user's kube config
+    become: true
+    command: cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+
+  - name: change permission for .kube/config
+    become: true
+    file:
+      path: /home/ubuntu/.kube/config
+      owner: ubuntu
+      group: ubuntu
+
+  - name: print join command
+    become: true
+    command: kubeadm token create --print-join-command
+    when: admin_conf_exist.stat.exists
+    register: kubeadm_join_cmd
+
+  - debug:
+      var: kubeadm_join_cmd.stdout_lines

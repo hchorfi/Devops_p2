@@ -11,6 +11,10 @@
     blockinfile: 
       block: "{{ lookup('file', './../terraform/hosts') }}"
       path: /etc/hosts
+  
+  - name: swapoff
+    become: true
+    command: swapoff -a
 
   - name: add k8s.conf file
     become: true
@@ -46,23 +50,31 @@
     apt:
       name: containerd
       update_cache: yes
+    tags:
+    - containerd_install
   
   - name: create containerd folder
     become: true
     file:
       path: /etc/containerd
       state: directory
+    tags:
+    - containerd_install
 
   - name: check if config.toml exist
     stat:
       path: /etc/containerd/config.toml
     register: config_toml_exist
+    tags:
+    - containerd_install
   
   - name: run containerd config
     become: true
     command: containerd config default
     when: not config_toml_exist.stat.exists
     register: containerd_config_default
+    tags:
+    - containerd_install
   
   - name: add containerd config to config.toml file
     become: true
@@ -72,9 +84,14 @@
         {{ containerd_config_default.stdout }}
       create: yes
     when: not config_toml_exist.stat.exists
+    tags:
+    - containerd_install
 
   - name: restart containerd
     become: true
     systemd:
       state: restarted
       name: containerd
+    tags:
+    - containerd_install
+    - containerd_restart

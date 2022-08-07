@@ -1,0 +1,32 @@
+- hosts: all
+  gather_facts: true
+  tasks:
+
+  - name: install apt-transport-https ca-certificates curl
+    become: true
+    apt:
+      pkg:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+      update_cache: yes
+  
+  - name: Download the Google Cloud public signing key
+    become: true
+    command: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  
+  - name: Add the Kubernetes apt repository
+    become: true
+    lineinfile:
+      path: /etc/apt/sources.list.d/kubernetes.list
+      line: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+      create: yes
+  
+  - name: install kubelet kubeadm kubectl
+    become: true
+    apt:
+      pkg:
+        - kubelet=1.21.0-00
+        - kubeadm=1.21.0-00
+        - kubectl=1.21.0-00
+      update_cache: yes
